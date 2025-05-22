@@ -1,0 +1,108 @@
+# Data Blocks
+
+A drag-and-drop form builder inspired by Form.io, built with React, DnD Kit, and Tailwind CSS.  
+Easily create, preview, and manage dynamic forms with support for basic, advanced, and layout components.
+
+---
+
+## Features
+
+- **Drag & Drop Builder:**  
+  Add, reorder, and nest form components visually.
+- **Component Library:**  
+  Includes text fields, text areas, numbers, checkboxes, selects, radios, email, phone, date/time, address, content, buttons, panels, and columns.
+- **Live Preview:**  
+  Instantly preview your form as a user would see it.
+- **JSON Schema View:**  
+  Toggle to view the underlying JSON schema of your form.
+- **Import/Export:**  
+  Save your form schema to a file or import an existing one.
+- **Undo/Redo:**  
+  Easily revert or reapply changes.
+- **Dashboard:**  
+  Manage all your saved forms: create, edit, or delete.
+
+---
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/RoshanTekno/data-blocks
+cd data-blocks
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Run the App
+
+```bash
+npm start
+```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Project Structure
+
+```
+src/
+  components/
+    FormBuilder/
+      FormBuilder.jsx
+      FormBuilderHeader.jsx
+      FormBuilderSidebar.jsx
+      FormBuilderCanvas.jsx
+    FormComponents/
+      SortableFormComponent.jsx
+      ComponentPreview.jsx
+  context/
+    FormContext.jsx
+  pages/
+    Dashboard.jsx
+  App.jsx
+  index.js
+```
+
+---
+
+## Usage
+
+- **Build a Form:**  
+  Drag components from the sidebar to the canvas. Reorder or nest components as needed.
+- **Preview:**  
+  Click the "Preview" button to see your form. Toggle between form view and JSON schema.
+- **Save/Export:**  
+  Export your form schema as JSON. Import to restore or share forms.
+- **Dashboard:**  
+  Access all your forms, edit or delete them, or create new ones.
+
+---
+
+## Customization
+
+- **Add New Components:**  
+  Edit `COMPONENT_CATEGORIES` in `FormBuilderSidebar.jsx` and extend rendering logic in `SortableFormComponent.jsx` and `ComponentPreview.jsx`.
+- **Styling:**  
+  Uses Tailwind CSS for easy customization.
+
+---
+
+## License
+
+MIT
+
+---
+
+## Credits
+
+- [Form.io](https://form.io/) for inspiration
+- [DnD Kit](https://dndkit.com/) for drag-and-drop
+- [React](https://react.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)

@@ -58,7 +58,13 @@ const FormBuilder = () => {
 
     if (active.data?.current?.isNew) {
       // New component from sidebar
-      addComponent(active.data.current.type, newIndex === -1 ? components.length : newIndex);
+      // Use type, label, and suggestedKey from drag data
+      const { type, label, suggestedKey } = active.data.current;
+      addComponent(
+        type,
+        newIndex === -1 ? components.length : newIndex,
+        { label, suggestedKey }
+      );
     } else if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
       reorderComponents(oldIndex, newIndex);
     }
