@@ -63,6 +63,12 @@ const SortableFormComponent = ({ component, index }) => {
         
         <div className="flex-1">
           <ComponentPreview component={component} isSelected={isSelected} />
+          {/* Show tab info if this is a tab */}
+          {component.type === 'tabs' && component.tabs && (
+            <div className="mt-2 text-xs text-gray-500">
+              {component.tabs.length} tab{component.tabs.length !== 1 ? 's' : ''}
+            </div>
+          )}
         </div>
       </div>
     </div>

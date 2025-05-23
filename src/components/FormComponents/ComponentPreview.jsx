@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const ComponentPreview = ({ component, isSelected = false }) => {
+  // Add state for active tab (for tabs component)
+  const [activeTab, setActiveTab] = useState(0);
+
   // Renders the appropriate input preview based on component type
   const renderComponentPreview = () => {
     switch (component.type) {
@@ -278,6 +281,48 @@ const ComponentPreview = ({ component, isSelected = false }) => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        );
+      
+      case 'tabs':
+        return (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{component.label || 'Tabs'}</label>
+            <div className="border border-gray-200 rounded-md">
+              <div className="flex border-b border-gray-200 bg-gray-50">
+                {(component.tabs || []).map((tab, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`px-4 py-2 text-sm font-medium border-r last:border-r-0 focus:outline-none ${
+                      idx === activeTab
+                        ? 'text-primary border-b-2 border-primary bg-white'
+                        : 'text-gray-700'
+                    }`}
+                    onClick={() => setActiveTab(idx)}
+                  >
+                    {tab.label || `Tab ${idx + 1}`}
+                  </button>
+                ))}
+              </div>
+              <div className="p-4">
+                {component.tabs && component.tabs.length > 0 && component.tabs[activeTab] ? (
+                  (component.tabs[activeTab].components || []).length > 0 ? (
+                    <div className="space-y-2">
+                      {(component.tabs[activeTab].components || []).map((child, i) => (
+                        <div key={i} className="border border-gray-100 rounded p-2 bg-gray-50">
+                          <span className="text-xs text-gray-700">{child.label || child.type}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">No fields in this tab</p>
+                  )
+                ) : (
+                  <p className="text-sm text-gray-400">No tabs configured</p>
+                )}
+              </div>
             </div>
           </div>
         );

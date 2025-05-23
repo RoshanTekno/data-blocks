@@ -86,9 +86,9 @@ export const FormProvider = ({ children }) => {
   }, [history, historyIndex]);
 
   // Add a component to the form
-  const addComponent = useCallback((componentType, index = -1) => {
+  const addComponent = useCallback((componentType, index = -1, options = {}) => {
     updateFormState(draft => {
-      const newComponent = createComponent(componentType);
+      const newComponent = createComponent(componentType, options);
       
       if (index === -1) {
         // Add to the end
@@ -119,15 +119,50 @@ export const FormProvider = ({ children }) => {
     toast.success('Component removed');
   }, [updateFormState, selectedComponent]);
 
-  // Update a component's properties
+  // Recursive helper to update a component by id (deeply nested)
+  function updateComponentRecursive(components, componentId, updates) {
+    return components.map(comp => {
+      if (comp.id === componentId) {
+        return { ...comp, ...updates };
+      }
+      if (Array.isArray(comp.tabs)) {
+        return {
+          ...comp,
+          tabs: comp.tabs.map(tab => ({
+            ...tab,
+            components: tab.components
+              ? updateComponentRecursive(tab.components, componentId, updates)
+              : tab.components
+          }))
+        };
+      }
+      if (Array.isArray(comp.columns)) {
+        return {
+          ...comp,
+          columns: comp.columns.map(col => ({
+            ...col,
+            components: col.components
+              ? updateComponentRecursive(col.components, componentId, updates)
+              : col.components
+          }))
+        };
+      }
+      if (Array.isArray(comp.components)) {
+        return {
+          ...comp,
+          components: updateComponentRecursive(comp.components, componentId, updates)
+        };
+      }
+      return comp;
+    });
+  }
+
+  // Update a component's properties (deeply nested)
   const updateComponent = useCallback((componentId, updates) => {
     updateFormState(draft => {
-      const component = draft.components.find(c => c.id === componentId);
-      if (component) {
-        Object.assign(component, updates);
-      }
+      draft.components = updateComponentRecursive(draft.components, componentId, updates);
     });
-    
+
     // Update selected component if it's the one being modified
     if (selectedComponent && selectedComponent.id === componentId) {
       setSelectedComponent(prev => ({
@@ -174,8 +209,8 @@ export const FormProvider = ({ children }) => {
     }
   }, [addToHistory]);
 
-  // Helper function to create a new component based on type
-  const createComponent = (type) => {
+  // Helper function to create a new component based on type, with options override
+  const createComponent = (type, options = {}) => {
     const baseComponent = {
       id: nanoid(),
       type,
@@ -184,6 +219,7 @@ export const FormProvider = ({ children }) => {
       placeholder: '',
       description: '',
       required: false,
+      ...options, // allow override
     };
 
     // Add type-specific properties
@@ -361,16 +397,24 @@ export const FormProvider = ({ children }) => {
           collapsed: false,
           components: [],
         };
+      case 'tabs':
+        return {
+          ...baseComponent,
+          tabs: options.tabs || [
+            { label: 'Tab 1', components: [] },
+            { label: 'Tab 2', components: [] }
+          ]
+        };
       case 'columns':
         return {
           ...baseComponent,
-          columns: [
+          columns: options.columns || [
             { components: [], width: 6, offset: 0, push: 0, pull: 0 },
-            { components: [], width: 6, offset: 0, push: 0, pull: 0 },
-          ],
+            { components: [], width: 6, offset: 0, push: 0, pull: 0 }
+          ]
         };
       default:
-        return baseComponent;
+        return { ...baseComponent, ...options };
     }
   };
 
@@ -391,11 +435,109 @@ export const FormProvider = ({ children }) => {
       content: 'Content',
       button: 'Button',
       panel: 'Panel',
+      tabs: 'Tabs',
       columns: 'Columns',
     };
     
     return labels[type] || 'Untitled';
   };
+
+  // Recursive helper to add a component to a container (tab, column, panel, etc.) at any depth
+  function addComponentToContainerHelper(components, containerId, addFn) {
+    return components.map(comp => {
+      if (comp.id === containerId) {
+        return addFn(comp);
+      }
+      // Recursively handle tabs
+      if (Array.isArray(comp.tabs)) {
+        return {
+          ...comp,
+          tabs: comp.tabs.map(tab => ({
+            ...tab,
+            components: tab.components
+              ? addComponentToContainerHelper(tab.components, containerId, addFn)
+              : tab.components
+          }))
+        };
+      }
+      // Recursively handle columns
+      if (Array.isArray(comp.columns)) {
+        return {
+          ...comp,
+          columns: comp.columns.map(col => ({
+            ...col,
+            components: col.components
+              ? addComponentToContainerHelper(col.components, containerId, addFn)
+              : col.components
+          }))
+        };
+      }
+      // Recursively handle generic containers (panel, etc.)
+      if (Array.isArray(comp.components)) {
+        return {
+          ...comp,
+          components: addComponentToContainerHelper(comp.components, containerId, addFn)
+        };
+      }
+      return comp;
+    });
+  }
+
+  // Add a component to a tab (deeply nested)
+  const addComponentToTab = useCallback((tabsComponentId, tabIdx, type, options = {}) => {
+    updateFormState(draft => {
+      const addToTab = (comp) => {
+        const newTabs = [...comp.tabs];
+        newTabs[tabIdx] = {
+          ...newTabs[tabIdx],
+          components: [
+            ...(newTabs[tabIdx].components || []),
+            createComponent(type, options)
+          ]
+        };
+        return { ...comp, tabs: newTabs };
+      };
+      draft.components = addComponentToContainerHelper(draft.components, tabsComponentId, addToTab);
+    });
+    toast.success(`Added ${type} to tab`);
+  }, [updateFormState]);
+
+  // Add a component to a column (deeply nested)
+  const addComponentToColumn = useCallback((columnsComponentId, columnIdx, type, options = {}) => {
+    updateFormState(draft => {
+      const addToColumn = (comp) => {
+        const newColumns = [...comp.columns];
+        newColumns[columnIdx] = {
+          ...newColumns[columnIdx],
+          components: [
+            ...(newColumns[columnIdx].components || []),
+            createComponent(type, options)
+          ]
+        };
+        return { ...comp, columns: newColumns };
+      };
+      draft.components = addComponentToContainerHelper(draft.components, columnsComponentId, addToColumn);
+    });
+    toast.success(`Added ${type} to column`);
+  }, [updateFormState]);
+
+  // Add a component to a generic container (panel, etc.)
+  const addComponentToContainer = useCallback((containerId, type, options = {}) => {
+    updateFormState(draft => {
+      const addToContainer = (comp) => ({
+        ...comp,
+        components: [
+          ...(comp.components || []),
+          {
+            ...createComponent(type),
+            ...options,
+          }
+        ]
+      });
+      draft.components = addComponentToContainerHelper(draft.components, containerId, addToContainer);
+    });
+    toast.success(`Added ${type} to container`);
+  }, [updateFormState]);
 
   const value = {
     formState,
@@ -412,6 +554,9 @@ export const FormProvider = ({ children }) => {
     importFormSchema,
     undo,
     redo,
+    addComponentToTab,
+    addComponentToColumn,
+    addComponentToContainer,
     canUndo: historyIndex > 0,
     canRedo: historyIndex < history.length - 1,
   };

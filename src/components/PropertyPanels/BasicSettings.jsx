@@ -11,8 +11,7 @@ const BasicSettings = ({ component }) => {
   const handleKeyChange = (e) => {
     const value = e.target.value
       .replace(/\s+/g, '_') // Replace spaces with underscores
-      .replace(/[^a-zA-Z0-9_]/g, ''); // Remove special characters except underscores
-    
+      .replace(/[^a-zA-Z0-9_]/g, ''); // Remove special characters except underscores    
     handleChange('key', value);
   };
 
@@ -302,6 +301,61 @@ const BasicSettings = ({ component }) => {
           <span className="ml-2 text-sm text-gray-700">Required</span>
         </label>
       </div>
+
+      {component.type === 'tabs' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tabs
+          </label>
+          <div className="space-y-2">
+            {(component.tabs || []).map((tab, idx) => (
+              <div key={idx} className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={tab.label || ''}
+                  onChange={e => {
+                    const newTabs = [...(component.tabs || [])];
+                    newTabs[idx] = { ...newTabs[idx], label: e.target.value };
+                    handleChange('tabs', newTabs);
+                  }}
+                  placeholder={`Tab ${idx + 1} Label`}
+                  className="flex-1 p-2 border border-gray-300 rounded-md text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newTabs = [...(component.tabs || [])];
+                    newTabs.splice(idx, 1);
+                    handleChange('tabs', newTabs);
+                  }}
+                  className="p-2 text-gray-400 hover:text-error focus:outline-none"
+                  title="Remove Tab"
+                  disabled={(component.tabs || []).length <= 1}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const newTabs = [...(component.tabs || [])];
+              newTabs.push({ label: `Tab ${newTabs.length + 1}`, components: [] });
+              handleChange('tabs', newTabs);
+            }}
+            className="mt-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md focus:outline-none"
+          >
+            Add Tab
+          </button>
+          <p className="text-xs text-gray-500 mt-1">
+            Edit tab labels and add/remove tabs. Fields for each tab can be managed in the form canvas.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

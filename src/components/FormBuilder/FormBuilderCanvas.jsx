@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useForm } from '../../context/FormContext';
@@ -8,74 +8,177 @@ import { motion } from 'framer-motion';
 const FormBuilderCanvas = () => {
   const { formState } = useForm();
   const { components } = formState;
-  
-  // Create droppable area with explicit data
-  const { setNodeRef } = useDroppable({
-    id: 'form-canvas',
-    data: {
-      type: 'canvas',
-      index: components.length, // Default to end of list
-    }
-  });
-  
-  // Generate unique IDs for SortableContext
-  const itemIds = components.map((comp) => comp.id);
 
-  // Empty state when no components have been added
-  if (components.length === 0) {
+  // Recursive renderer for nested components
+  const renderComponent = (component, index, parentId = null) => {
+    if (component.type === 'tabs') {
+      return <TabsContainer key={component.id} component={component} />;
+    }
+    if (component.type === 'columns') {
+      return <ColumnsContainer key={component.id} component={component} />;
+    }
+    if (component.components) {
+      return (
+        <PanelContainer key={component.id} component={component}>
+          {component.components.map((child, idx) => renderComponent(child, idx, component.id))}
+        </PanelContainer>
+      );
+    }
+    // Default: render as sortable
     return (
-      <div
-        ref={setNodeRef}
-        className="flex-1 p-4 overflow-y-auto bg-gray-50"
-      >
-        <div className="h-full flex flex-col items-center justify-center text-center p-6">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto"
-          >
-            <div className="text-gray-400 mb-4 flex justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Start Building Your Form</h3>
-            <p className="text-gray-500 mb-4">
-              Drag and drop components from the sidebar to create your form. 
-              Add fields, layout elements, and more to build your perfect form.
-            </p>
-            <div className="border-2 border-dashed border-gray-200 rounded-md p-4 bg-gray-50 text-gray-400">
-              Drop components here
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <SortableFormComponent
+        key={component.id}
+        component={component}
+        index={index}
+      />
     );
-  }
+  };
 
   return (
     <div
-      ref={setNodeRef}
+      ref={useDroppable({ id: 'form-canvas' }).setNodeRef}
       className="flex-1 p-6 overflow-y-auto bg-gray-50"
     >
       <div className="mx-auto max-w-3xl">
         <div className="bg-white rounded-lg shadow-md p-6 min-h-[300px]">
-          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-            {components.map((component, index) => (
-              <SortableFormComponent
-                key={component.id}
-                component={component}
-                index={index}
-              />
-            ))}
+          <SortableContext items={components.map((comp) => comp.id)} strategy={verticalListSortingStrategy}>
+            {components.map((component, index) => renderComponent(component, index))}
           </SortableContext>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Tabs container
+const TabsContainer = ({ component }) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const tabs = component.tabs || [];
+  return (
+    <div className="mb-4">
+      <div className="flex border-b border-gray-200 bg-gray-50 rounded-t">
+        {tabs.map((tab, idx) => (
+          <button
+            key={idx}
+            type="button"
+            className={`px-4 py-2 text-sm font-medium border-r last:border-r-0 focus:outline-none ${
+              idx === activeTab
+                ? 'text-primary border-b-2 border-primary bg-white'
+                : 'text-gray-700'
+            }`}
+            onClick={() => setActiveTab(idx)}
+          >
+            {tab.label || `Tab ${idx + 1}`}
+          </button>
+        ))}
+      </div>
+      <div className="p-4 border border-t-0 border-gray-200 rounded-b">
+        <TabDroppable
+          componentId={component.id}
+          tabIdx={activeTab}
+          tab={tabs[activeTab]}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Columns container
+const ColumnsContainer = ({ component }) => {
+  const columns = component.columns || [];
+  return (
+    <div className="mb-4">
+      <div className="flex -mx-2">
+        {columns.map((column, idx) => (
+          <div key={idx} className="px-2 flex-1">
+            <div className="mb-2 text-xs text-gray-500">Column {idx + 1}</div>
+            <ColumnDroppable
+              componentId={component.id}
+              columnIdx={idx}
+              column={column}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Panel or generic container
+const PanelContainer = ({ component, children }) => {
+  const { setNodeRef } = useDroppable({
+    id: component.id,
+    data: {
+      type: 'container',
+      componentId: component.id,
+    },
+  });
+  return (
+    <div ref={setNodeRef} className="mb-4 border border-dashed border-gray-200 rounded p-2 bg-gray-50">
+      {children}
+    </div>
+  );
+};
+
+// Droppable area for a tab
+const TabDroppable = ({ componentId, tabIdx, tab }) => {
+  const { setNodeRef } = useDroppable({
+    id: `tab-${componentId}-${tabIdx}`,
+    data: {
+      type: 'tab',
+      componentId,
+      tabIdx,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="min-h-[60px] border-2 border-dashed border-gray-200 rounded-md p-2 bg-gray-50"
+    >
+      {(tab?.components || []).length > 0 ? (
+        tab.components.map((child, i) =>
+          // Recursively render nested components
+          <React.Fragment key={child.id || i}>
+            {/* Use renderComponent if you want full nesting */}
+            {/* renderComponent(child, i, `tab-${componentId}-${tabIdx}`) */}
+            <SortableFormComponent component={child} index={i} />
+          </React.Fragment>
+        )
+      ) : (
+        <div className="text-gray-400 text-sm text-center py-4">Drop fields here</div>
+      )}
+    </div>
+  );
+};
+
+// Droppable area for a column
+const ColumnDroppable = ({ componentId, columnIdx, column }) => {
+  const { setNodeRef } = useDroppable({
+    id: `column-${componentId}-${columnIdx}`,
+    data: {
+      type: 'column',
+      componentId,
+      columnIdx,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="min-h-[60px] border-2 border-dashed border-gray-200 rounded-md p-2 bg-gray-50"
+    >
+      {(column?.components || []).length > 0 ? (
+        column.components.map((child, i) =>
+          // Recursively render nested components
+          <React.Fragment key={child.id || i}>
+            {/* Use renderComponent if you want full nesting */}
+            <SortableFormComponent component={child} index={i} />
+          </React.Fragment>
+        )
+      ) : (
+        <div className="text-gray-400 text-sm text-center py-4">Drop fields here</div>
+      )}
     </div>
   );
 };

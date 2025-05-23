@@ -54,7 +54,7 @@ const TabIcon = ({ type }) => {
 const FormBuilderProperties = () => {
   const { selectedComponent, setSelectedComponent, removeComponent } = useForm();
   const [activeTab, setActiveTab] = useState('basic');
-  
+
   // If no component is selected, show empty state
   if (!selectedComponent) {
     return (

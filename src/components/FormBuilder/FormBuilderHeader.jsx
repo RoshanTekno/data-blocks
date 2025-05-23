@@ -89,6 +89,16 @@ const FormBuilderHeader = () => {
     setIsPreviewOpen(true);
   };
 
+  // Add copy JSON handler
+  const handleCopyJson = () => {
+    try {
+      navigator.clipboard.writeText(JSON.stringify(formState.components, null, 2));
+      toast.success('JSON copied to clipboard');
+    } catch {
+      toast.error('Failed to copy JSON');
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-4">
@@ -242,12 +252,21 @@ const FormBuilderHeader = () => {
             </button>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Form Preview</h2>
-              <button
-                onClick={() => setShowJson((v) => !v)}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                {showJson ? 'Show Form' : 'Show JSON'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyJson}
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                  title="Copy JSON"
+                >
+                  Copy JSON
+                </button>
+                <button
+                  onClick={() => setShowJson((v) => !v)}
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                >
+                  {showJson ? 'Show Form' : 'Show JSON'}
+                </button>
+              </div>
             </div>
             <div className="max-h-[60vh] overflow-y-auto">
               {showJson ? (
