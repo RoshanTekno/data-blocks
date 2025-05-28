@@ -54,8 +54,10 @@ const FormBuilder = () => {
     const components = formState.components;
 
     // Handle drop into a tab
-    if (over?.data?.current?.type === 'tab') {
-      const { componentId: tabsComponentId, tabIdx } = over.data.current;
+    if (overId && typeof overId === 'string' && overId.startsWith('tab-')) {
+      // overId format: tab-<tabsComponentId>-<tabIdx>
+      const [, tabsComponentId, tabIdxStr] = overId.split('-');
+      const tabIdx = parseInt(tabIdxStr, 10);
 
       if (active.data?.current?.isNew) {
         const { type, label, suggestedKey } = active.data.current;
@@ -73,8 +75,10 @@ const FormBuilder = () => {
     }
 
     // Handle drop into a column
-    if (over?.data?.current?.type === 'column') {
-      const { componentId: columnsComponentId, columnIdx } = over.data.current;
+    if (overId && typeof overId === 'string' && overId.startsWith('column-')) {
+      // overId format: column-<columnsComponentId>-<columnIdx>
+      const [, columnsComponentId, columnIdxStr] = overId.split('-');
+      const columnIdx = parseInt(columnIdxStr, 10);
 
       if (active.data?.current?.isNew) {
         const { type, label, suggestedKey } = active.data.current;

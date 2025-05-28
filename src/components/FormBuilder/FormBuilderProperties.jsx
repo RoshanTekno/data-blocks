@@ -58,7 +58,7 @@ const FormBuilderProperties = () => {
   // If no component is selected, show empty state
   if (!selectedComponent) {
     return (
-      <div className="w-80 border-l border-gray-200 bg-gray-50 overflow-y-auto overflow-x-hidden h-full hidden md:block">
+      <div className="w-80 border-l border-gray-200 bg-gray-50 overflow-y-auto h-full hidden md:block">
         <div className="p-6 h-full flex items-center justify-center text-center">
           <div className="text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,7 +74,7 @@ const FormBuilderProperties = () => {
   }
 
   return (
-    <div className="w-80 border-l border-gray-200 bg-white overflow-y-auto overflow-x-hidden h-full hidden md:block">
+    <div className="w-80 border-l border-gray-200 bg-white overflow-y-auto h-full hidden md:block">
       <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-gray-800 flex items-center">
