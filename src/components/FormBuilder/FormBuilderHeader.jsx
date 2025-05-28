@@ -5,11 +5,12 @@ import FormPreview from '../FormPreview/FormPreview';
 
 
 const FormBuilderHeader = () => {
-  const { 
-    formState, 
-    updateFormMetadata, 
-    exportFormSchema, 
+  const {
+    formState,
+    updateFormMetadata,
+    exportFormSchema,
     importFormSchema,
+    saveForm,
     undo,
     redo,
     canUndo,
@@ -97,6 +98,10 @@ const FormBuilderHeader = () => {
     } catch {
       toast.error('Failed to copy JSON');
     }
+  };
+
+  const handleSave = () => {
+    saveForm();
   };
 
   return (
@@ -197,7 +202,8 @@ const FormBuilderHeader = () => {
           </svg>
         </button>
         
-        <button 
+        <button
+          onClick={handleSave}
           className="ml-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors text-sm font-medium"
         >
           Save Form

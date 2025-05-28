@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useForm } from '../../context/FormContext';
 import ComponentPreview from './ComponentPreview';
 
-const SortableFormComponent = ({ component, index }) => {
+const SortableFormComponent = ({ component, index, children }) => {
   const { selectedComponent, setSelectedComponent } = useForm();
   const isSelected = selectedComponent && selectedComponent.id === component.id;
   
@@ -50,7 +50,7 @@ const SortableFormComponent = ({ component, index }) => {
       {...listeners}
     >
       <div className="flex items-start group">
-        <div 
+        <div
           className="cursor-grab p-2 text-gray-400 hover:text-gray-600 drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -71,6 +71,7 @@ const SortableFormComponent = ({ component, index }) => {
           )}
         </div>
       </div>
+      {children}
     </div>
   );
 };

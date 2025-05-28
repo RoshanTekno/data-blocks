@@ -10,27 +10,24 @@ const FormBuilderCanvas = () => {
   const { components } = formState;
 
   // Recursive renderer for nested components
-  const renderComponent = (component, index, parentId = null) => {
+  const renderComponent = (component, index) => {
+    let content = null;
     if (component.type === 'tabs') {
-      return <TabsContainer key={component.id} component={component} />;
-    }
-    if (component.type === 'columns') {
-      return <ColumnsContainer key={component.id} component={component} />;
-    }
-    if (component.components) {
-      return (
-        <PanelContainer key={component.id} component={component}>
-          {component.components.map((child, idx) => renderComponent(child, idx, component.id))}
+      content = <TabsContainer component={component} renderComponent={renderComponent} />;
+    } else if (component.type === 'columns') {
+      content = <ColumnsContainer component={component} renderComponent={renderComponent} />;
+    } else if (component.components) {
+      content = (
+        <PanelContainer component={component}>
+          {component.components.map((child, idx) => renderComponent(child, idx))}
         </PanelContainer>
       );
     }
-    // Default: render as sortable
+
     return (
-      <SortableFormComponent
-        key={component.id}
-        component={component}
-        index={index}
-      />
+      <SortableFormComponent key={component.id} component={component} index={index}>
+        {content}
+      </SortableFormComponent>
     );
   };
 
@@ -51,7 +48,7 @@ const FormBuilderCanvas = () => {
 };
 
 // Tabs container
-const TabsContainer = ({ component }) => {
+const TabsContainer = ({ component, renderComponent }) => {
   const [activeTab, setActiveTab] = useState(0);
   const tabs = component.tabs || [];
   return (
@@ -77,6 +74,7 @@ const TabsContainer = ({ component }) => {
           componentId={component.id}
           tabIdx={activeTab}
           tab={tabs[activeTab]}
+          renderComponent={renderComponent}
         />
       </div>
     </div>
@@ -84,7 +82,7 @@ const TabsContainer = ({ component }) => {
 };
 
 // Columns container
-const ColumnsContainer = ({ component }) => {
+const ColumnsContainer = ({ component, renderComponent }) => {
   const columns = component.columns || [];
   return (
     <div className="mb-4">
@@ -96,6 +94,7 @@ const ColumnsContainer = ({ component }) => {
               componentId={component.id}
               columnIdx={idx}
               column={column}
+              renderComponent={renderComponent}
             />
           </div>
         ))}
@@ -121,7 +120,7 @@ const PanelContainer = ({ component, children }) => {
 };
 
 // Droppable area for a tab
-const TabDroppable = ({ componentId, tabIdx, tab }) => {
+const TabDroppable = ({ componentId, tabIdx, tab, renderComponent }) => {
   const { setNodeRef } = useDroppable({
     id: `tab-${componentId}-${tabIdx}`,
     data: {
@@ -137,14 +136,11 @@ const TabDroppable = ({ componentId, tabIdx, tab }) => {
       className="min-h-[60px] border-2 border-dashed border-gray-200 rounded-md p-2 bg-gray-50"
     >
       {(tab?.components || []).length > 0 ? (
-        tab.components.map((child, i) =>
-          // Recursively render nested components
+        tab.components.map((child, i) => (
           <React.Fragment key={child.id || i}>
-            {/* Use renderComponent if you want full nesting */}
-            {/* renderComponent(child, i, `tab-${componentId}-${tabIdx}`) */}
-            <SortableFormComponent component={child} index={i} />
+            {renderComponent(child, i)}
           </React.Fragment>
-        )
+        ))
       ) : (
         <div className="text-gray-400 text-sm text-center py-4">Drop fields here</div>
       )}
@@ -153,7 +149,7 @@ const TabDroppable = ({ componentId, tabIdx, tab }) => {
 };
 
 // Droppable area for a column
-const ColumnDroppable = ({ componentId, columnIdx, column }) => {
+const ColumnDroppable = ({ componentId, columnIdx, column, renderComponent }) => {
   const { setNodeRef } = useDroppable({
     id: `column-${componentId}-${columnIdx}`,
     data: {
@@ -169,13 +165,11 @@ const ColumnDroppable = ({ componentId, columnIdx, column }) => {
       className="min-h-[60px] border-2 border-dashed border-gray-200 rounded-md p-2 bg-gray-50"
     >
       {(column?.components || []).length > 0 ? (
-        column.components.map((child, i) =>
-          // Recursively render nested components
+        column.components.map((child, i) => (
           <React.Fragment key={child.id || i}>
-            {/* Use renderComponent if you want full nesting */}
-            <SortableFormComponent component={child} index={i} />
+            {renderComponent(child, i)}
           </React.Fragment>
-        )
+        ))
       ) : (
         <div className="text-gray-400 text-sm text-center py-4">Drop fields here</div>
       )}
