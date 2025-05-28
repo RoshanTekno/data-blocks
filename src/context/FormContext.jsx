@@ -14,8 +14,8 @@ export const useForm = () => {
 };
 
 export const FormProvider = ({ children }) => {
-  // Form state with initial form structure
-  const [formState, setFormState] = useState({
+  const createEmptyForm = () => ({
+    id: nanoid(),
     title: 'Untitled Form',
     description: '',
     components: [],
@@ -28,6 +28,9 @@ export const FormProvider = ({ children }) => {
       },
     },
   });
+
+  // Form state with initial form structure
+  const [formState, setFormState] = useState(() => createEmptyForm());
 
   // History for undo/redo functionality
   const [history, setHistory] = useState([]);
@@ -208,6 +211,48 @@ export const FormProvider = ({ children }) => {
       return false;
     }
   }, [addToHistory]);
+
+  const listForms = useCallback(() => {
+    try {
+      return JSON.parse(localStorage.getItem('forms')) || [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const saveForm = useCallback(() => {
+    const forms = listForms();
+    const idx = forms.findIndex(f => f.id === formState.id);
+    if (idx >= 0) {
+      forms[idx] = formState;
+    } else {
+      forms.push(formState);
+    }
+    localStorage.setItem('forms', JSON.stringify(forms));
+    toast.success('Form saved');
+  }, [formState, listForms]);
+
+  const loadForm = useCallback((id) => {
+    const forms = listForms();
+    const found = forms.find(f => f.id === id);
+    if (found) {
+      setFormState(found);
+      setHistory([found]);
+      setHistoryIndex(0);
+    }
+  }, [listForms]);
+
+  const deleteForm = useCallback((id) => {
+    const forms = listForms().filter(f => f.id !== id);
+    localStorage.setItem('forms', JSON.stringify(forms));
+  }, [listForms]);
+
+  const newForm = useCallback(() => {
+    const fresh = createEmptyForm();
+    setFormState(fresh);
+    setHistory([fresh]);
+    setHistoryIndex(0);
+  }, []);
 
   // Helper function to create a new component based on type, with options override
   const createComponent = (type, options = {}) => {
@@ -552,6 +597,11 @@ export const FormProvider = ({ children }) => {
     updateFormMetadata,
     exportFormSchema,
     importFormSchema,
+    saveForm,
+    loadForm,
+    listForms,
+    deleteForm,
+    newForm,
     undo,
     redo,
     addComponentToTab,
