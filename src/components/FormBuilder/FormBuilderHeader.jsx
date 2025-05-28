@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from '../../context/FormContext';
 import { toast } from 'react-toastify';
-import ComponentPreview from '../FormComponents/ComponentPreview';
+import FormPreview from '../FormPreview/FormPreview';
 
 
 const FormBuilderHeader = () => {
@@ -274,11 +274,7 @@ const FormBuilderHeader = () => {
                   {JSON.stringify(formState.components, null, 2)}
                 </pre>
               ) : (
-                formState.components.map((component, idx) => (
-                  <div key={component.id} className="mb-4">
-                    <ComponentPreview component={component} />
-                  </div>
-                ))
+                <FormPreview form={formState} />
               )}
             </div>
           </div>
