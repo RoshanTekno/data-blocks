@@ -1,14 +1,17 @@
 import React from 'react';
-import { DndContext } from '@dnd-kit/core';
-import FormBuilder from './components/FormBuilder/FormBuilder';
+import { Routes, Route } from 'react-router-dom';
 import { FormProvider } from './context/FormContext';
+import Home from './pages/Home';
+import BuilderPage from './pages/BuilderPage';
 
 function App() {
   return (
     <FormProvider>
-      <div className="app-container h-screen flex flex-col">
-        <FormBuilder />
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/builder" element={<BuilderPage />} />
+        <Route path="/builder/:id" element={<BuilderPage />} />
+      </Routes>
     </FormProvider>
   );
 }

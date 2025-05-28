@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useForm } from '../../context/FormContext';
 import { toast } from 'react-toastify';
-import ComponentPreview from '../FormComponents/ComponentPreview';
+import { Link } from 'react-router-dom';
+import FormPreview from '../FormPreview/FormPreview';
 
 
 const FormBuilderHeader = () => {
@@ -12,6 +13,7 @@ const FormBuilderHeader = () => {
     importFormSchema,
     undo,
     redo,
+    saveFormToStorage,
     canUndo,
     canRedo
   } = useForm();
@@ -99,6 +101,10 @@ const FormBuilderHeader = () => {
     }
   };
 
+  const handleSave = () => {
+    saveFormToStorage();
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-4">
@@ -112,6 +118,7 @@ const FormBuilderHeader = () => {
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
           </div>
+          <Link to="/" className="text-primary mr-4 text-sm underline">Home</Link>
           <h1 className="text-lg font-medium text-gray-800">
             {isEditingTitle ? (
               <input
@@ -197,7 +204,8 @@ const FormBuilderHeader = () => {
           </svg>
         </button>
         
-        <button 
+        <button
+          onClick={handleSave}
           className="ml-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors text-sm font-medium"
         >
           Save Form
@@ -274,11 +282,7 @@ const FormBuilderHeader = () => {
                   {JSON.stringify(formState.components, null, 2)}
                 </pre>
               ) : (
-                formState.components.map((component, idx) => (
-                  <div key={component.id} className="mb-4">
-                    <ComponentPreview component={component} />
-                  </div>
-                ))
+                <FormPreview form={formState} />
               )}
             </div>
           </div>

@@ -14,8 +14,8 @@ export const useForm = () => {
 };
 
 export const FormProvider = ({ children }) => {
-  // Form state with initial form structure
-  const [formState, setFormState] = useState({
+  const createEmptyForm = () => ({
+    id: nanoid(),
     title: 'Untitled Form',
     description: '',
     components: [],
@@ -28,6 +28,9 @@ export const FormProvider = ({ children }) => {
       },
     },
   });
+
+  // Form state with initial form structure
+  const [formState, setFormState] = useState(createEmptyForm());
 
   // History for undo/redo functionality
   const [history, setHistory] = useState([]);
@@ -208,6 +211,42 @@ export const FormProvider = ({ children }) => {
       return false;
     }
   }, [addToHistory]);
+
+  const saveFormToStorage = useCallback(() => {
+    const saved = JSON.parse(localStorage.getItem('savedForms') || '[]');
+    const id = formState.id || nanoid();
+    const updated = { ...formState, id };
+    const idx = saved.findIndex(f => f.id === id);
+    const entry = { id, title: updated.title, schema: updated };
+    if (idx >= 0) {
+      saved[idx] = entry;
+    } else {
+      saved.push(entry);
+    }
+    localStorage.setItem('savedForms', JSON.stringify(saved));
+    setFormState(updated);
+    toast.success('Form saved');
+  }, [formState]);
+
+  const loadFormFromStorage = useCallback((id) => {
+    const saved = JSON.parse(localStorage.getItem('savedForms') || '[]');
+    const entry = saved.find(f => f.id === id);
+    if (entry) {
+      setFormState(entry.schema);
+      setHistory([entry.schema]);
+      setHistoryIndex(0);
+      toast.success('Form loaded');
+    } else {
+      toast.error('Form not found');
+    }
+  }, []);
+
+  const initializeNewForm = useCallback(() => {
+    const empty = createEmptyForm();
+    setFormState(empty);
+    setHistory([empty]);
+    setHistoryIndex(0);
+  }, []);
 
   // Helper function to create a new component based on type, with options override
   const createComponent = (type, options = {}) => {
@@ -557,6 +596,9 @@ export const FormProvider = ({ children }) => {
     addComponentToTab,
     addComponentToColumn,
     addComponentToContainer,
+    saveFormToStorage,
+    loadFormFromStorage,
+    initializeNewForm,
     canUndo: historyIndex > 0,
     canRedo: historyIndex < history.length - 1,
   };
